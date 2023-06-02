@@ -363,7 +363,7 @@ function Board:legalMoves(x, y, flag)
 
         for _, move in ipairs(knightMoves) do
             local i, j = move[1], move[2]
-            if i >= 2 and i <= 9 and j >= 2 and j <= 9 then
+            if i >= 2 and i <= 9 and j >= 1 and j <= 8 then
                 table.insert(legalMoves, { i, j })
             end
         end
@@ -511,7 +511,7 @@ function Board:legalMoves(x, y, flag)
 
         for _, move in ipairs(kingMoves) do
             local i, j = move[1], move[2]
-            if i >= 2 and i <= 9 and j >= 2 and j <= 9 then
+            if i >= 2 and i <= 9 and j >= 1 and j <= 8 then
                 -- Check if the king is not in check after the move
                 if flag or not self:isInCheck(i, j) then
                     table.insert(legalMoves, { i, j })
@@ -522,7 +522,8 @@ function Board:legalMoves(x, y, flag)
         -- Check if castling is possible
 
         -- Short castle
-        if self:isPiece(x, y + 1) == false and self:isPiece(x, y + 2) == false then
+        if not self:isPiece(x, y + 1) and not self:isPiece(x, y + 2) and
+            not self:isInCheck(x, y + 1) and not self:isInCheck(x, y + 2) then
             local rook = self.board[x][y + 3]
 
             if rook ~= nil and self:getColor(piece) == self:getColor(rook) and
@@ -533,7 +534,8 @@ function Board:legalMoves(x, y, flag)
         end
 
         -- Long castle
-        if self:isPiece(x, y - 1) == false and self:isPiece(x, y - 2) == false and self:isPiece(x, y - 3) == false then
+        if not self:isPiece(x, y - 1) and not self:isPiece(x, y - 2) and not self:isPiece(x, y - 3) and
+            not self:isInCheck(x, y - 1) and not self:isInCheck(x, y - 2) then
             local rook = self.board[x][y - 4]
 
             if rook ~= nil and self:getColor(piece) == self:getColor(rook) and
