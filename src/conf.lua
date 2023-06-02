@@ -9,10 +9,13 @@ function love.conf(t)
             width = 8,
             height = 10,
             cell = {
-                width = 64,
-                height = 64
+                width = 80,
+                height = 80
             },
+            color = {
+                light = { 240, 217, 181 },
+                dark = { 181, 136, 99 },
+            }
         },
     }
 end
-
