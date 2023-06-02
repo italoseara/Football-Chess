@@ -77,7 +77,7 @@ function Board:new()
         p = images.black[6],
     }
 
-    -- Set font
+    -- Create font
     self.font = love.graphics.newFont("assets/fonts/RobotoMono-SemiBold.ttf", 18)
     self.goalFont = love.graphics.newFont("assets/fonts/RobotoMono-SemiBold.ttf", 24)
 
@@ -137,7 +137,6 @@ function Board:move(x1, y1, x2, y2)
         if y2 ~= y1 and self.board[x2][y2] == " " then
             self.board[x2 + 1][y2] = " "
         end
-
     elseif piece == "p" then
         -- Handle promotion
         if x2 == 9 then
@@ -285,13 +284,12 @@ function Board:legalMoves(x, y, flag)
 
         -- Check for en passant
         if self.lastMove.piece == "p" and self.lastMove.from[1] == 3 and self.lastMove.to[1] == 5 then
-            if self.lastMove.to[2] == y - 1 then
+            if self.lastMove.to[1] == x and self.lastMove.to[2] == y - 1 then
                 table.insert(legalMoves, { x - 1, y - 1 })
-            elseif self.lastMove.to[2] == y + 1 then
+            elseif self.lastMove.to[1] == x and self.lastMove.to[2] == y + 1 then
                 table.insert(legalMoves, { x - 1, y + 1 })
             end
         end
-
     elseif piece == "p" then -- Black Pawn
         -- Calculate possible moves for a black pawn
         -- Similar to the white pawn logic but with different movement direction
@@ -316,13 +314,12 @@ function Board:legalMoves(x, y, flag)
 
         -- Check for en passant
         if self.lastMove.piece == "P" and self.lastMove.from[1] == 8 and self.lastMove.to[1] == 6 then
-            if self.lastMove.to[2] == y - 1 then
+            if self.lastMove.to[1] == x and self.lastMove.to[2] == y - 1 then
                 table.insert(legalMoves, { x + 1, y - 1 })
-            elseif self.lastMove.to[2] == y + 1 then
+            elseif self.lastMove.to[1] == x and self.lastMove.to[2] == y + 1 then
                 table.insert(legalMoves, { x + 1, y + 1 })
             end
         end
-
     elseif piece == "R" or piece == "r" then -- Rook
         -- Calculate possible moves for a rook
 
@@ -681,11 +678,9 @@ end
 function Board:drawGoal()
     -- Draw Goal String
     local str = "GOAL"
+
     for i = 1, #str do
         local x = (i + 1) * Config.board.cell.width
-
-        local y1 = 0
-        local y2 = (self.height - 1) * Config.board.cell.height
 
         -- Draw the top goal
         local color1 = Config.board.color.light
@@ -698,7 +693,7 @@ function Board:drawGoal()
         love.graphics.draw(
             text,
             x + Config.board.cell.width / 2 - text:getWidth() / 2,
-            y1 + Config.board.cell.height / 2 - text:getHeight() / 2
+            Config.board.cell.height / 2 - text:getHeight() / 2
         )
 
         -- Draw the bottom goal
@@ -712,7 +707,7 @@ function Board:drawGoal()
         love.graphics.draw(
             text,
             x + Config.board.cell.width / 2 - text:getWidth() / 2,
-            y2 + Config.board.cell.height / 2 - text:getHeight() / 2
+            (self.height - 1) * Config.board.cell.height + Config.board.cell.height / 2 - text:getHeight() / 2
         )
     end
 
