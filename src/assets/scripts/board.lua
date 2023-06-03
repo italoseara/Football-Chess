@@ -77,6 +77,17 @@ function Board:new()
         p = images.black[6],
     }
 
+    self.ball = {
+        position = { 9, 5 },
+        image = love.graphics.newImage("assets/images/ball.png"),
+    }
+    self.ball.width = self.ball.image:getWidth()
+    self.ball.height = self.ball.image:getHeight()
+    self.ball.scale = math.min(
+        Config.board.cell.width / self.ball.width,
+        Config.board.cell.height / self.ball.height
+    ) / 2
+
     -- Create font
     self.font = love.graphics.newFont("assets/fonts/RobotoMono-SemiBold.ttf", 18)
     self.goalFont = love.graphics.newFont("assets/fonts/RobotoMono-SemiBold.ttf", 24)
@@ -100,6 +111,7 @@ function Board:new()
     self.highlightedSquares = {}
     self.highlightedPiece = {}
 
+    -- Logic
     self.turn = "w"
     self.lastMove = {
         from = {},
@@ -716,6 +728,20 @@ function Board:drawGoal()
     love.graphics.setColor(1, 1, 1)
 end
 
+function Board:drawBall()
+    local x = (self.ball.position[2] - 1) * Config.board.cell.width
+    local y = (self.ball.position[1] - 1) * Config.board.cell.height
+
+    love.graphics.draw(
+        self.ball.image,
+        x + (Config.board.cell.width - self.ball.width * self.ball.scale),
+        y + (Config.board.cell.height - self.ball.height * self.ball.scale),
+        0,
+        self.ball.scale,
+        self.ball.scale
+    )
+end
+
 function Board:draw()
     -- Draw the 8x8 board
     self:drawBoard()
@@ -728,6 +754,9 @@ function Board:draw()
 
     -- Draw the pieces
     self:drawPieces()
+
+    -- Draw the ball
+    self:drawBall()
 end
 
 return Board

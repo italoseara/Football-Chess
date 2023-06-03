@@ -1,8 +1,10 @@
 function love.conf(t)
-    t.title = "Football Chess" -- The title of the window the game is in (string)
-    t.author = "Italo Seara"   -- The author of the game (string)
-    t.console = true           -- Attach a console (boolean, Windows only)
-    t.window.vsync = true      -- Enable vertical sync (boolean)
+    t.title = "Football Chess"
+    t.author = "Italo Seara"
+    t.window.icon = "assets/images/icon.png"
+    
+    t.console = false
+    t.window.vsync = true
 
     Config = {
         board = {
