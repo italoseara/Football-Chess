@@ -120,6 +120,12 @@ function Board:new()
 end
 
 function Board:move(x1, y1, x2, y2)
+    if self.turn == "ball" then
+        self.ball.position[1] = x2
+        self.ball.position[2] = y2
+        return
+    end
+
     -- If the moved piece is a king:
     local piece = self.board[x1][y1]
 
@@ -180,7 +186,8 @@ function Board:gameLogic()
         -- Check if the clicked square contains a piece
         local clickedPiece = self.board[squareY][squareX]
 
-        if self:isPiece(squareY, squareX) and self:getColor(clickedPiece) == self.turn then
+        if (self:isPiece(squareY, squareX) and self:getColor(clickedPiece) == self.turn) or
+            (self.turn == "ball" and self:isBall(squareX, squareY)) then
             -- Calculate the possible moves for the clicked piece
             local legalMoves = self:legalMoves(squareY, squareX)
 
@@ -195,10 +202,18 @@ function Board:gameLogic()
                     self:move(self.highlightedPiece[2], self.highlightedPiece[1], squareY, squareX)
 
                     -- Change the turn
-                    if self.turn == "w" then
+                    if self:ballPossession() == self.turn then
+                        self.turn = "ball"
+                    elseif self.turn == "w" then
                         self.turn = "b"
-                    else
+                    elseif self.turn == "b" then
                         self.turn = "w"
+                    elseif self.turn == "ball" then
+                        if self:getColor(self.lastMove.piece) == "w" then
+                            self.turn = "b"
+                        else
+                            self.turn = "w"
+                        end
                     end
                 end
             end
@@ -216,6 +231,10 @@ end
 
 function Board:isPiece(x, y)
     return self.board[x][y] ~= " "
+end
+
+function Board:isBall(x, y)
+    return self.ball.position[1] == y and self.ball.position[2] == x
 end
 
 function Board:getColor(piece)
@@ -240,6 +259,15 @@ function Board:getKingPosition(color)
             end
         end
     end
+end
+
+function Board:ballPossession()
+    local ballX, ballY = self.ball.position[1], self.ball.position[2]
+
+    if self:isPiece(ballX, ballY) then
+        return self:getColor(self.board[ballX][ballY])
+    end
+    return false
 end
 
 function Board:isInCheck(x, y)
@@ -336,14 +364,22 @@ function Board:legalMoves(x, y, flag)
         -- Calculate possible moves for a rook
 
         -- Check for possible moves in the same row
-        for i = x - 1, 2, -1 do
+        for i = x - 1, 1, -1 do
+            if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "b")) and i == 1) then
+                break
+            end
+
             table.insert(legalMoves, { i, y })
             if self:isPiece(i, y) then
                 break
             end
         end
 
-        for i = x + 1, 9 do
+        for i = x + 1, 10 do
+            if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "w")) and i == 10) then
+                break
+            end
+
             table.insert(legalMoves, { i, y })
             if self:isPiece(i, y) then
                 break
@@ -375,14 +411,25 @@ function Board:legalMoves(x, y, flag)
 
         for _, move in ipairs(knightMoves) do
             local i, j = move[1], move[2]
-            if i >= 2 and i <= 9 and j >= 1 and j <= 8 then
+            if i >= 1 and i <= 10 and j >= 1 and j <= 8 then
+                if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "b")) and i == 1) then
+                    break
+                end
+                if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "w")) and i == 10) then
+                    break
+                end
+
                 table.insert(legalMoves, { i, j })
             end
         end
     elseif piece == "B" or piece == "b" then -- Bishop
         -- Calculate possible moves for a bishop
         -- Check valid moves in the top left direction
-        for i = x - 1, 2, -1 do
+        for i = x - 1, 1, -1 do
+            if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "b")) and i == 1) then
+                break
+            end
+
             local j = y - (x - i)
             if j < 1 then
                 break
@@ -395,7 +442,11 @@ function Board:legalMoves(x, y, flag)
         end
 
         -- Check valid moves in the top right direction
-        for i = x - 1, 2, -1 do
+        for i = x - 1, 1, -1 do
+            if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "b")) and i == 1) then
+                break
+            end
+
             local j = y + (x - i)
             if j > 9 then
                 break
@@ -408,7 +459,11 @@ function Board:legalMoves(x, y, flag)
         end
 
         -- Check valid moves in the bottom left direction
-        for i = x + 1, 9 do
+        for i = x + 1, 10 do
+            if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "w")) and i == 10) then
+                break
+            end
+
             local j = y - (i - x)
             if j < 1 then
                 break
@@ -421,7 +476,11 @@ function Board:legalMoves(x, y, flag)
         end
 
         -- Check valid moves in the bottom right direction
-        for i = x + 1, 9 do
+        for i = x + 1, 10 do
+            if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "w")) and i == 10) then
+                break
+            end
+
             local j = y + (i - x)
             if j > 9 then
                 break
@@ -434,14 +493,22 @@ function Board:legalMoves(x, y, flag)
         end
     elseif piece == "Q" or piece == "q" then
         -- Check valid moves in the vertical and horizontal directions (rook-like moves)
-        for i = x - 1, 2, -1 do
+        for i = x - 1, 1, -1 do
+            if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "b")) and i == 1) then
+                break
+            end
+
             table.insert(legalMoves, { i, y })
             if self:isPiece(i, y) then
                 break
             end
         end
 
-        for i = x + 1, 9 do
+        for i = x + 1, 10 do
+            if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "w")) and i == 10) then
+                break
+            end
+
             table.insert(legalMoves, { i, y })
             if self:isPiece(i, y) then
                 break
@@ -463,7 +530,11 @@ function Board:legalMoves(x, y, flag)
         end
 
         -- Check valid moves in the diagonal directions (bishop-like moves)
-        for i = x - 1, 2, -1 do
+        for i = x - 1, 1, -1 do
+            if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "b")) and i == 1) then
+                break
+            end
+
             local j = y - (x - i)
             if j < 1 then
                 break
@@ -476,7 +547,11 @@ function Board:legalMoves(x, y, flag)
         end
 
         -- Check valid moves in the top right direction
-        for i = x - 1, 2, -1 do
+        for i = x - 1, 1, -1 do
+            if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "b")) and i == 1) then
+                break
+            end
+
             local j = y + (x - i)
             if j > 9 then
                 break
@@ -489,7 +564,11 @@ function Board:legalMoves(x, y, flag)
         end
 
         -- Check valid moves in the bottom left direction
-        for i = x + 1, 9 do
+        for i = x + 1, 10 do
+            if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "w")) and i == 10) then
+                break
+            end
+
             local j = y - (i - x)
             if j < 1 then
                 break
@@ -502,7 +581,11 @@ function Board:legalMoves(x, y, flag)
         end
 
         -- Check valid moves in the bottom right direction
-        for i = x + 1, 9 do
+        for i = x + 1, 10 do
+            if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "w")) and i == 10) then
+                break
+            end
+
             local j = y + (i - x)
             if j > 9 then
                 break
@@ -523,7 +606,14 @@ function Board:legalMoves(x, y, flag)
 
         for _, move in ipairs(kingMoves) do
             local i, j = move[1], move[2]
-            if i >= 2 and i <= 9 and j >= 1 and j <= 8 then
+            if i >= 1 and i <= 10 and j >= 1 and j <= 8 then
+                if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "b")) and i == 1) then
+                    break
+                end
+                if ((self.turn ~= "ball" or (self.turn == "ball" and self:ballPossession() == "w")) and i == 10) then
+                    break
+                end
+
                 -- Check if the king is not in check after the move
                 if flag or not self:isInCheck(i, j) then
                     table.insert(legalMoves, { i, j })
