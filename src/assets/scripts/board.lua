@@ -194,6 +194,14 @@ function Board:gameLogic()
             -- Update the highlightedSquares with the possible moves
             self.highlightedSquares = legalMoves
             self.highlightedPiece = { squareX, squareY }
+
+            if self.turn == "ball" and #legalMoves == 0 then
+                if self:ballPossession() == "w" then
+                    self.turn = "b"
+                else
+                    self.turn = "w"
+                end
+            end
         else
             -- If the click square is in the highlightedSquares, move the piece
             for i, v in ipairs(self.highlightedSquares) do
